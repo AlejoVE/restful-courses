@@ -1,22 +1,28 @@
 //the returned objet of Joi is a class
 const Joi = require("joi");
 const express = require("express");
+const fs = require("fs");
 const app = express();
 
 app.use(express.json());
 
-const courses = [
-  { id: 1, name: "course1" },
-  { id: 2, name: "course2" },
-  { id: 3, name: "course3" },
-];
+const filePath = __dirname + "/" + "course.json";
+
+// const courses = [
+//   { id: 1, name: "course1" },
+//   { id: 2, name: "course2" },
+//   { id: 3, name: "course3" },
+// ];
 
 app.get("/", (req, res) => {
   res.send("Hello world");
 });
 
 app.get("/api/courses", (req, res) => {
-  res.send(courses);
+  fs.readFile(filePath, (err, content) => {
+    if (err) throw err;
+    res.send(content);
+  });
 });
 
 app.post("/api/courses", (req, res) => {
