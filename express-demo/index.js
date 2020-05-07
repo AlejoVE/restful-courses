@@ -1,3 +1,5 @@
+//the returned objet of Joi is a class
+const Joi = require("joi");
 const express = require("express");
 const app = express();
 
@@ -18,6 +20,19 @@ app.get("/api/courses", (req, res) => {
 });
 
 app.post("/api/courses", (req, res) => {
+  //This is like a mold of what the body of the object should have
+  const schema = {
+    //name should be a string with a minimum of 3 characters
+    name: Joi.string().min(3).required(),
+  };
+
+  const result = Joi.validate(req.body, schema);
+
+  if (result.error) {
+    //400 convention for Bad Response
+    res.status(400).send(result.error.details[0].message);
+    return;
+  }
   const course = {
     id: courses.length + 1,
     name: req.body.name,
