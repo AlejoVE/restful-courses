@@ -20,17 +20,9 @@ app.get("/api/courses", (req, res) => {
 });
 
 app.post("/api/courses", (req, res) => {
-  //This is like a mold of what the body of the object should have
-  const schema = {
-    //name should be a string with a minimum of 3 characters
-    name: Joi.string().min(3).required(),
-  };
-
-  const result = Joi.validate(req.body, schema);
-
-  if (result.error) {
-    //400 convention for Bad Response
-    res.status(400).send(result.error.details[0].message);
+  const { error } = validateCourse(req.body); //object destructuring
+  if (error) {
+    res.status(400).send(error.details[0].message);
     return;
   }
   const course = {
@@ -51,3 +43,33 @@ app.get("/api/courses/:id", (req, res) => {
 //PORT
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`listening on port ${port}...`));
+
+app.put("/api/courses/:id", (req, res) => {
+  //Looking for the course
+  //if not existing return 404 Not found
+  const course = courses.find((c) => c.id === parseInt(req.params.id));
+  if (!course)
+    res.status(404).send("The course with the given ID was not found");
+
+  //validate de course
+  const { error } = validateCourse(req.body); //object destructuring
+  //if invalid, return 400 Bad Request
+  if (error) {
+    //400 convention for Bad Response
+    res.status(400).send(error.details[0].message);
+    return;
+  }
+  //Update course
+  course.name = req.body.name;
+  //Return updated course to the client
+  res.send(course);
+});
+
+function validateCourse(course) {
+  const schema = {
+    //name should be a string with a minimum of 3 characters
+    name: Joi.string().min(3).required(),
+  };
+
+  return Joi.validate(course, schema);
+}
