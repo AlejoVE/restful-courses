@@ -8,12 +8,6 @@ app.use(express.json());
 
 const filePath = __dirname + "/" + "course.json";
 
-// const courses = [
-//   { id: 1, name: "course1" },
-//   { id: 2, name: "course2" },
-//   { id: 3, name: "course3" },
-// ];
-
 app.get("/", (req, res) => {
   res.send("Hello world");
 });
@@ -70,26 +64,50 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`listening on port ${port}...`));
 
 app.put("/api/courses/:id", (req, res) => {
-  //Looking for the course
-  //if not existing return 404 Not found
-  const course = courses.find((c) => c.id === parseInt(req.params.id));
-  if (!course) {
-    res.status(404).send("The course with the given ID was not found");
-    return;
-  }
+  fs.readFile(filePath, "utf-8", (err, data) => {
+    if (err) throw err;
+    let courses = JSON.parse(data);
+    let courseFiltered = courses.find((c) => c.id === parseInt(req.params.id));
 
-  //validate de course
-  const { error } = validateCourse(req.body); //object destructuring
-  //if invalid, return 400 Bad Request
-  if (error) {
-    //400 convention for Bad Response
-    res.status(400).send(error.details[0].message);
-    return;
-  }
-  //Update course
-  course.name = req.body.name;
-  //Return updated course to the client
-  res.send(course);
+    if (courseFiltered) {
+      const { error } = validateCourse(req.body); //object destructuring
+      if (error) {
+        res.status(400).send(error.details[0].message);
+        return;
+      }
+      courseFiltered.name = req.body.name;
+      let json = JSON.stringify(courses, null, "");
+      fs.writeFile(filePath, json, (err) => {
+        if (err) res.status(400).send(err);
+        res.send(courseFiltered);
+      });
+    }
+    if (!courseFiltered) {
+      res.status(404).send("The course with the given ID was not found");
+      return;
+    }
+  });
+});
+
+app.delete("/api/courses/:id", (req, res) => {
+  fs.readFile(filePath, "utf-8", (err, data) => {
+    if (err) res.status(400).send(err);
+    let courses = JSON.parse(data);
+    let courseFiltered = courses.find((c) => c.id === parseInt(req.params.id));
+
+    if (courseFiltered) {
+      const index = courses.indexOf(courseFiltered);
+      const courseSpliced = courses.splice(index, 1);
+      const newText = JSON.stringify(courses, null, "");
+      fs.writeFile(filePath, newText, (err) => {
+        if (err) res.status(400).send(err);
+        res.send(courseSpliced);
+      });
+    } else {
+      res.status(404).send("The course with the given ID was not found");
+      return;
+    }
+  });
 });
 
 function validateCourse(course) {
@@ -100,24 +118,3 @@ function validateCourse(course) {
 
   return Joi.validate(course, schema);
 }
-
-app.delete("/api/courses/:id", (req, res) => {
-  fs.readFile(filePath, "utf-8", (err, data) => {
-    if (err) throw err;
-    let courses = JSON.parse(data);
-    let courseFiltered = courses.find((c) => c.id === parseInt(req.params.id));
-
-    if (courseFiltered) {
-      const index = courses.indexOf(courseFiltered);
-      const courseSpliced = courses.splice(index, 1);
-      const newText = JSON.stringify(courses, null, "");
-      fs.writeFile(filePath, newText, (err) => {
-        if (err) res.status(404).send(err);
-        res.send(courseSpliced);
-      });
-    } else {
-      res.status(404).send("The course with the given ID was not found");
-      return;
-    }
-  });
-});
