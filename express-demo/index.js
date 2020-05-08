@@ -90,16 +90,22 @@ function validateCourse(course) {
 }
 
 app.delete("/api/courses/:id", (req, res) => {
-  //look for the course
-  //If not existing, return 404
-  const course = courses.find((c) => c.id === parseInt(req.params.id));
-  if (!course) {
-    res.status(404).send("The course with the given ID was not found");
-    return;
-  }
-  //delete
-  const index = courses.indexOf(course);
-  courses.splice(index, 1);
-  //for convention. return the same (deleted) course
-  res.send(course);
+  fs.readFile(filePath, "utf-8", (err, data) => {
+    if (err) throw err;
+    let courses = JSON.parse(data);
+    let courseFiltered = courses.find((c) => c.id === parseInt(req.params.id));
+
+    if (courseFiltered) {
+      const index = courses.indexOf(courseFiltered);
+      const courseSpliced = courses.splice(index, 1);
+      const newText = JSON.stringify(courses, null, "");
+      fs.writeFile(filePath, newText, (err) => {
+        if (err) res.status(404).send(err);
+        res.send(courseSpliced);
+      });
+    } else {
+      res.status(404).send("The course with the given ID was not found");
+      return;
+    }
+  });
 });
