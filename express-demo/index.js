@@ -31,12 +31,24 @@ app.post("/api/courses", (req, res) => {
     res.status(400).send(error.details[0].message);
     return;
   }
-  const course = {
-    id: courses.length + 1,
-    name: req.body.name,
-  };
-  courses.push(course);
-  res.send(course);
+
+  fs.readFile(filePath, "utf-8", (err, content) => {
+    if (err) res.status(400).send(err);
+    let course = JSON.parse(content);
+
+    const newCourse = {
+      id: course.length + 1,
+      name: req.body.name,
+    };
+    course.push(newCourse);
+
+    const json = JSON.stringify(course, null, "");
+
+    fs.writeFile(filePath, json, (err) => {
+      if (err) res.status(400).send(err);
+      res.send(newCourse);
+    });
+  });
 });
 
 app.get("/api/courses/:id", (req, res) => {
