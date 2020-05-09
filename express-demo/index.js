@@ -15,7 +15,8 @@ app.get("/", (req, res) => {
 app.get("/api/courses", (req, res) => {
   fs.readFile(filePath, (err, content) => {
     if (err) throw err;
-    res.send(content);
+    const course = JSON.parse(content);
+    res.send(course);
   });
 });
 
@@ -67,7 +68,9 @@ app.put("/api/courses/:id", (req, res) => {
   fs.readFile(filePath, "utf-8", (err, data) => {
     if (err) throw err;
     let courses = JSON.parse(data);
-    let courseFiltered = courses.find((c) => c.id === parseInt(req.params.id));
+    let courseFiltered = courses.find(
+      (course) => course.id === parseInt(req.params.id)
+    );
 
     if (courseFiltered) {
       const { error } = validateCourse(req.body); //object destructuring
@@ -93,7 +96,9 @@ app.delete("/api/courses/:id", (req, res) => {
   fs.readFile(filePath, "utf-8", (err, data) => {
     if (err) res.status(400).send(err);
     let courses = JSON.parse(data);
-    let courseFiltered = courses.find((c) => c.id === parseInt(req.params.id));
+    let courseFiltered = courses.find(
+      (course) => course.id === parseInt(req.params.id)
+    );
 
     if (courseFiltered) {
       const index = courses.indexOf(courseFiltered);
