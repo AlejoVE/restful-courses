@@ -50,7 +50,9 @@ app.get("/api/courses/:id", (req, res) => {
   fs.readFile(filePath, (err, content) => {
     if (err) throw err;
     let courses = JSON.parse(content);
-    let courseFiltered = courses.find((c) => c.id === parseInt(req.params.id));
+    let courseFiltered = courses.find(
+      (course) => course.id === parseInt(req.params.id)
+    );
 
     if (!courseFiltered) {
       res.status(404).send("The course with the given ID was not found");
